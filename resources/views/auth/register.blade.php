@@ -31,38 +31,18 @@
         </div>
 
         <!-- Password -->
-        <div class="mt-4 relative">
+        <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
-
-            <div class="relative">
-                <x-text-input id="password" class="block mt-1 w-full pr-10" type="password" name="password" required
-                    autocomplete="new-password" />
-
-                <!-- Ko'z ikonkasi -->
-                <button type="button" onclick="togglePassword('password', 'eye-icon-password')"
-                    class="absolute inset-y-0 right-0 pr-3 mt-1 flex items-center text-gray-500 hover:text-indigo-600 focus:outline-none">
-                    <i id="eye-icon-password" class="fas fa-eye"></i>
-                </button>
-            </div>
-
+            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required
+                autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4 relative">
+        <div class="mt-4">
             <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <div class="relative">
-                <x-text-input id="password_confirmation" class="block mt-1 w-full pr-10" type="password"
-                    name="password_confirmation" required autocomplete="new-password" />
-
-                <!-- Ko'z ikonkasi -->
-                <button type="button" onclick="togglePassword('password_confirmation', 'eye-icon-confirm')"
-                    class="absolute inset-y-0 right-0 pr-3 mt-1 flex items-center text-gray-500 hover:text-indigo-600 focus:outline-none">
-                    <i id="eye-icon-confirm" class="fas fa-eye"></i>
-                </button>
-            </div>
-
+            <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
+                name="password_confirmation" required autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
@@ -78,21 +58,6 @@
         </div>
     </form>
 
-    <!-- Parolni ko'rsatish/yashirish JS kodi -->
-    <script>
-        function togglePassword(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                input.type = "password";
-                icon.classList.remove("fa-eye-slash");
-                icon.classList.add("fa-eye");
-            }
-        }
-    </script>
+    <!-- Universal parol ko'zi skripti (SVG bilan) -->
+    @include('partials.password-eye')
 </x-guest-layout>

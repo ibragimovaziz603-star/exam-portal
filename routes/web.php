@@ -60,7 +60,13 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::post('/join', [StudentController::class, 'joinExam'])->name('joinExam');
     Route::get('/waiting/{token}', [StudentController::class, 'waitingRoom'])->name('waiting');
     Route::get('/take-exam/{token}', [StudentController::class, 'takeExam'])->name('takeExam');
-    Route::post('/submit-exam/{token}', [StudentController::class, 'submitExam'])->name('submitExam');
+
+    // MUHIM O'ZGARISH: GET va POST ikkalasi ham ruxsat etildi
+    Route::match(['get', 'post'], '/submit-exam/{token}', [StudentController::class, 'submitExam'])->name('submitExam');
+
+    // YANGI HIMOYA: Agar sahifa yangilansa yoki eski havola ochilsa, xato o'rniga takeExam ga yo'naltiradi
+    Route::get('/submit-exam/{token}', fn($token) => redirect()->route('student.takeExam', $token));
+
     Route::get('/result/{token}', [StudentController::class, 'result'])->name('result');
     Route::post('/warning/{token}', [StudentController::class, 'addWarning'])->name('warning');
     Route::get('/ping/{token}', function ($token) {

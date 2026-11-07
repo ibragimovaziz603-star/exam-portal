@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // 1. Proxy sozlamasi (IP to'g'ri aniqlanishi uchun)
+        
         $middleware->trustProxies(at: '*');
 
         // 2. Admin uchun alias
