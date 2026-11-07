@@ -1,3 +1,12 @@
+# 1-BOSQICH: Node.js yordamida Vite assetlarini yig'ish
+FROM node:20-alpine AS node_builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# 2-BOSQICH: Asosiy PHP image
 FROM php:8.4-fpm
 
 RUN apt-get update && apt-get install -y \
@@ -18,6 +27,9 @@ RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 WORKDIR /var/www/html
 COPY . .
 
+# Node.js bosqichida yig'ilgan assetlarni ko'chirish
+COPY --from=node_builder /app/public/build ./public/build
+
 RUN composer install --no-dev --optimize-autoloader
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -28,9 +40,7 @@ RUN php artisan config:clear || true
 RUN php artisan cache:clear || true
 RUN php artisan route:clear || true
 
-# BAZANI MAJBURAN POSTGRESQL QILISH
 ENV DB_CONNECTION=pgsql
 
 EXPOSE 80
-# Konteyner ishga tushganda avval migratsiyalarni bajarish, keyin xizmatni ishga tushirish
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
