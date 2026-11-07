@@ -9,7 +9,7 @@
             <div class="md:col-span-4 lg:col-span-3">
                 <h2 class="text-2xl font-black text-blue-600 mb-2 tracking-tighter">EXAM PORTAL</h2>
                 <p class="text-gray-500 text-xs mb-1">Qo'llab-quvvatlash xizmati:</p>
-                <p class="text-lg font-bold text-gray-800 mb-2">+998 (90) 123 45 67</p>
+                <p class="text-lg font-bold text-gray-800 mb-2">+998 (95) 148 66 84</p>
                 <p class="text-gray-600 text-xs mb-1 flex items-center gap-2">
                     <i class="fas fa-map-marker-alt text-gray-400"></i> Toshkent sh., Chilonzor tumani
                 </p>
