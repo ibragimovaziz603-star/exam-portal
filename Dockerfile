@@ -32,4 +32,5 @@ RUN php artisan route:clear || true
 ENV DB_CONNECTION=pgsql
 
 EXPOSE 80
-CMD php artisan serve --host=0.0.0.0 --port=80
+# Konteyner ishga tushganda avval migratsiyalarni bajarish, keyin xizmatni ishga tushirish
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
