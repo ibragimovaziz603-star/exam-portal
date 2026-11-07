@@ -23,12 +23,12 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Eski keshlarni tozalash
+# Keshni tozalash
 RUN php artisan config:clear || true
 RUN php artisan cache:clear || true
 RUN php artisan route:clear || true
 
-# MUHIM: Bazani majburan PostgreSQL ga o'zgartirish
+# BAZANI MAJBURAN POSTGRESQL QILISH
 ENV DB_CONNECTION=pgsql
 
 EXPOSE 80
