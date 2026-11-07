@@ -34,4 +34,5 @@ RUN php artisan key:generate --force || true
 RUN php artisan config:cache || true
 
 EXPOSE 80
-CMD php artisan serve --host=0.0.0.0 --port=80
+# Muhit o'zgaruvchilarini majburan yuklash va serverni ishga tushirish
+CMD php artisan config:clear && php artisan serve --host=0.0.0.0 --port=80
