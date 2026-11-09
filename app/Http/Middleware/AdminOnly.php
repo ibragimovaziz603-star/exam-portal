@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response; // <--- BU QATOR QO'SHILDI
+use Symfony\Component\HttpFoundation\Response; // <-- BU QATOR TURISHI SHART
 
 class AdminOnly
 {
