@@ -45,12 +45,12 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # MUHIM: Keshni yig'ish (Build vaqtida)
-RUN php artisan config:cache || true
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
 
-# Bazani majburan PostgreSQL ga o'zgartirish
+# Bazani majburan PostgreSQL ga o'zgartirish (BU YERDA XATO BOR EDI)
 ENV DB_CONNECTION=pgsql
+ENV DATABASE_URL=postgresql://neondb_owner:npg_GfiJIdEl7UH8@ep-royal-surf-bd7xru9o-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
 EXPOSE 80
 
