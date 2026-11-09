@@ -120,9 +120,9 @@
                         </div>
                     </div>
 
-                    <div class="px-5 py-4 bg-yellow-50 border-b">
+                    <div class="px-5 py-3 bg-yellow-50 border-b overflow-y-auto" style="max-height:30vh">
                         <p class="text-xs font-bold text-gray-500 mb-1">MASALA SHARTI</p>
-                        <p class="text-lg font-bold whitespace-pre-line">{{ $q->question_text }}</p>
+                        <p class="text-base font-bold whitespace-pre-line">{{ $q->question_text }}</p>
                     </div>
 
                     <div class="flex-1 grid grid-cols-1 md:grid-cols-2 min-h-0">
@@ -236,42 +236,51 @@
         }
 
         function openEditor(id) {
-            if (done[id]) return;
             var ta = document.getElementById('code-' + id);
-            // Default kod yozilmaydi, faqat ochadi
+            if (ta.value.trim() === '' && lastStarter[id] === undefined) {
+                ta.value = STARTERS[document.getElementById('lang-' + id).value];
+                lastStarter[id] = ta.value;
+            }
+            // Qulfni ochish (har doim tahrirlash mumkin)
+            ta.readOnly = false;
             document.getElementById('ed-' + id).classList.remove('hidden');
         }
 
         function closeEditor(id) {
             document.getElementById('ed-' + id).classList.add('hidden');
-            if (done[id]) return;
+
             var st = document.getElementById('status-' + id);
             var code = document.getElementById('code-' + id).value.trim();
-            // Starter tekshiruvi olib tashlandi (bo'sh bo'lgani uchun)
             var empty = code === '';
-            st.innerText = empty ? 'Hali yozilmagan' : 'Yozilgan (hali topshirilmagan)';
-            st.className = 'mt-2 text-sm ' + (empty ? 'text-gray-400' : 'text-yellow-600 font-bold');
+
+            // Holatni yangilash
+            if (empty) {
+                st.innerText = 'Hali yozilmagan';
+                st.className = 'mt-2 text-sm text-gray-400';
+            } else if (done[id]) {
+                st.innerText = 'Topshirildi ✓ (test tugagunicha o\'zgartirish mumkin)';
+                st.className = 'mt-2 text-sm text-green-600 font-bold';
+            } else {
+                st.innerText = 'Yozilgan (hali topshirilmagan)';
+                st.className = 'mt-2 text-sm text-yellow-600 font-bold';
+            }
         }
 
         function markDone(id) {
             var code = document.getElementById('code-' + id).value.trim();
-            
-            // Majburiy tekshiruv olib tashlandi (kod bo'sh bo'lsa ham yopish mumkin)
-            if (!code) {
-                if (!confirm('Siz hech qanday kod yozmadingiz. Baribir topshirasizmi?')) return;
-            } else {
-                if (!confirm('Javobni topshirasizmi? Keyin o\'zgartirib bo\'lmaydi.')) return;
-            }
+            if (!code) { alert('Avval kod yozing.'); return; }
 
             done[id] = true;
-            document.getElementById('code-' + id).readOnly = true;
             document.getElementById('ed-' + id).classList.add('hidden');
 
             var st = document.getElementById('status-' + id);
-            st.innerText = code ? 'Topshirildi ✓ (o\'zgartirib bo\'lmaydi)' : 'Topshirildi (bo\'sh)';
-            st.className = 'mt-2 text-sm font-bold ' + (code ? 'text-green-600' : 'text-red-500');
-            document.getElementById('card-' + id).classList.add('opacity-70', 'cursor-not-allowed');
-            document.getElementById('icon-' + id).className = 'fas fa-lock text-2xl text-gray-400';
+            st.innerText = 'Topshirildi ✓ (test tugagunicha o\'zgartirish mumkin)';
+            st.className = 'mt-2 text-sm text-green-600 font-bold';
+
+            // Ikonkani yashil qilish
+            document.getElementById('icon-' + id).className = 'fas fa-check-circle text-2xl text-green-500';
+            // Kartani qulflamaslik (chunki qayta ochish mumkin)
+            document.getElementById('card-' + id).classList.remove('opacity-70', 'cursor-not-allowed');
         }
 
         function runCode(id) {
@@ -377,7 +386,7 @@
             fetch(WARN_URL.replace('/warning/', '/ping/'), { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { if (r.status === 404) { submitted = true; location.href = "{{ route('home') }}"; } })
                 .catch(function () { });
-        }, 10000);
+        }, 30000); // <--- 10000 o'rniga 30000 qilindi
     </script>
 </body>
 

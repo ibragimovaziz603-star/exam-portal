@@ -327,7 +327,7 @@
                 .then(r => r.json()).then(d => render(d.students)).catch(() => { });
         }
         load();
-        setInterval(load, 3000);
+        setInterval(load, 6000);
 
         grid.addEventListener('click', (e) => {
             if (e.target.closest('a')) return;

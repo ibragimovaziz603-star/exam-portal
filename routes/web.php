@@ -124,4 +124,19 @@ Route::get('/bot-stats', function (\Illuminate\Http\Request $r) {
     return response()->json($out);
 });
 
+Route::get('/setup-admin', function () {
+    // 1. Barcha eski userlarni o'chirish
+    \App\Models\User::truncate();
+
+    // 2. Yangi admin yaratish
+    \App\Models\User::create([
+        'name' => 'Aziz',
+        'email' => 'ibragimovaziz603@gmail.com',
+        'password' => bcrypt('aziz12345'), // Parolni o'zingiz xohlagancha o'zgartiring
+        'role' => 'admin',
+    ]);
+
+    return 'Admin yaratildi! Endi bu marshrutni o\'chirib tashlang.';
+});
+
 require __DIR__ . '/auth.php';

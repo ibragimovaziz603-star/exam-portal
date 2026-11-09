@@ -24,6 +24,8 @@ class StudentResult extends Model
         'score' => 'float',
     ];
 
+    private $aqCache = null;
+
     protected static function booted()
     {
         static::creating(function ($s) {
@@ -49,6 +51,9 @@ class StudentResult extends Model
     // Shu o'quvchiga tushgan savollar: tasodifiy tanlanadi, testlar tepada, masalalar pastda
     public function assignedQuestions()
     {
+        if ($this->aqCache !== null)
+            return $this->aqCache;
+
         $exam = $this->exam;
         $all = $exam->questions()->with('options')->get();
 
@@ -56,15 +61,17 @@ class StudentResult extends Model
             $t = $all->where('type', '!=', 'masala')->shuffle();
             $m = $all->where('type', 'masala')->shuffle();
             if (!$this->finished_at) {
-                if ($exam->pick_tests !== null) $t = $t->take($exam->pick_tests);
-                if ($exam->pick_masalas !== null) $m = $m->take($exam->pick_masalas);
+                if ($exam->pick_tests !== null)
+                    $t = $t->take($exam->pick_tests);
+                if ($exam->pick_masalas !== null)
+                    $m = $m->take($exam->pick_masalas);
             }
             $this->question_ids = $t->pluck('id')->merge($m->pluck('id'))->values()->all();
             $this->save();
         }
 
         $byId = $all->keyBy('id');
-        return collect($this->question_ids)->map(fn ($id) => $byId->get($id))->filter()->values();
+        return $this->aqCache = collect($this->question_ids)->map(fn($id) => $byId->get($id))->filter()->values();
     }
 
     public function getScoreTextAttribute()
