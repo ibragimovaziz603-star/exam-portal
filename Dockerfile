@@ -48,9 +48,8 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
 
-# Bazani majburan PostgreSQL ga o'zgartirish (BU YERDA XATO BOR EDI)
+# Bazani majburan PostgreSQL ga o'zgartirish
 ENV DB_CONNECTION=pgsql
-ENV DATABASE_URL=postgresql://neondb_owner:npg_fwUckHWj0AK1@ep-royal-surf-bd7xru9o-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
 EXPOSE 80
 
