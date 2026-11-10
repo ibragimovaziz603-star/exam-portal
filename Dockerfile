@@ -1,6 +1,3 @@
-# ==========================================
-# 1-BOSQICH: Node.js yordamida Vite assetlarini yig'ish
-# ==========================================
 FROM node:20-alpine AS node_builder
 WORKDIR /app
 COPY package*.json ./
@@ -8,50 +5,31 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# ==========================================
-# 2-BOSQICH: Asosiy PHP image
-# ==========================================
 FROM php:8.4-fpm
 
-# Kerakli paketlarni o'rnatish
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libpq-dev \
-    nginx
+    git curl libpng-dev libonig-dev libxml2-dev zip unzip libpq-dev nginx \
+    && rm -rf /var/lib/apt/lists/*
 
-# Composer'ni o'rnatish
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# PHP kengaytmalarini o'rnatish
-RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd opcache
 
 WORKDIR /var/www/html
 COPY . .
-
-# Node.js bosqichida yig'ilgan assetlarni ko'chirish
 COPY --from=node_builder /app/public/build ./public/build
 
-# Composer o'rnatish
 RUN composer install --no-dev --optimize-autoloader
 
-# Ruxsatlarni sozlash
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# PHP-FPM va OPcache sozlamalari
+RUN printf "[www]\npm = dynamic\npm.max_children = 20\npm.start_servers = 6\npm.min_spare_servers = 4\npm.max_spare_servers = 10\n" > /usr/local/etc/php-fpm.d/zz-pool.conf \
+    && printf "opcache.enable=1\nopcache.memory_consumption=128\nopcache.validate_timestamps=0\n" > /usr/local/etc/php/conf.d/opcache.ini
 
-# MUHIM: Keshni yig'ish (Build vaqtida)
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
+# Nginx
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY docker/nginx.conf /etc/nginx/conf.d/app.conf
 
-# Bazani majburan PostgreSQL ga o'zgartirish
-ENV DB_CONNECTION=pgsql
+RUN chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache
+RUN chmod +x docker/start.sh
 
 EXPOSE 80
-
-# Serverni ishga tushirish
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
+CMD ["sh", "docker/start.sh"]
