@@ -74,6 +74,27 @@ class StudentResult extends Model
         return $this->aqCache = collect($this->question_ids)->map(fn($id) => $byId->get($id))->filter()->values();
     }
 
+    public function recalcScore(): void
+    {
+        $answers = $this->answers()->get()->keyBy('question_id');
+        $score = 0;
+        foreach ($this->assignedQuestions() as $q) {
+            $x = $answers->get($q->id);
+            if (!$x)
+                continue;
+            if ($q->type === 'masala') {
+                $score += ((int) $x->grade) / 5;
+            } else {
+                $o = $q->options->firstWhere('id', $x->option_id);
+                if ($o && $o->is_correct)
+                    $score++;
+            }
+        }
+        if (abs($score - (float) $this->score) > 0.001) {
+            $this->update(['score' => round($score, 2)]);
+        }
+    }
+
     public function getScoreTextAttribute()
     {
         $s = rtrim(rtrim(number_format((float) $this->score, 2, '.', ''), '0'), '.');

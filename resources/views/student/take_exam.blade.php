@@ -156,7 +156,6 @@
     </div>
 
     <script>
-        // ============ HIMOYA: "Orqaga" tugmasini bloklash ============
         var EXAM_KEY = 'exam_finished_{{ $student->token }}';
         var submitted = false;
 
@@ -177,7 +176,6 @@
             window.location.href = "{{ route('student.result', $student->token) }}";
         }
 
-        // ============ Asosiy kod ============
         var form = document.getElementById('exam-form');
         var done = {};
         var CSRF = "{{ csrf_token() }}";
@@ -214,15 +212,12 @@
             document.getElementById('tab-masala').className = a + (which === 'masala' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700');
         }
 
-        // ============ STARTERS: Python mutlaqo bo'sh ============
         var STARTERS = {
-            python: '', // Bo'sh! Hech qanday tayyor kod yo'q
+            python: '',
             html: '<!DOCTYPE html>\n<html>\n<head>\n<title>Page Title</title>\n</head>\n<body>\n\n</body>\n</html>',
             js: '<!DOCTYPE html>\n<html>\n<body>\n\n<scr' + 'ipt>\n\n</scr' + 'ipt>\n\n</body>\n</html>'
         };
         var lastStarter = {};
-
-        // DOMContentLoaded da default kod yozilmaydi (olib tashlandi)
 
         function onLangChange(id) {
             var ta = document.getElementById('code-' + id);
@@ -241,7 +236,6 @@
                 ta.value = STARTERS[document.getElementById('lang-' + id).value];
                 lastStarter[id] = ta.value;
             }
-            // Qulfni ochish (har doim tahrirlash mumkin)
             ta.readOnly = false;
             document.getElementById('ed-' + id).classList.remove('hidden');
         }
@@ -253,7 +247,6 @@
             var code = document.getElementById('code-' + id).value.trim();
             var empty = code === '';
 
-            // Holatni yangilash
             if (empty) {
                 st.innerText = 'Hali yozilmagan';
                 st.className = 'mt-2 text-sm text-gray-400';
@@ -277,9 +270,7 @@
             st.innerText = 'Topshirildi ✓ (test tugagunicha o\'zgartirish mumkin)';
             st.className = 'mt-2 text-sm text-green-600 font-bold';
 
-            // Ikonkani yashil qilish
             document.getElementById('icon-' + id).className = 'fas fa-check-circle text-2xl text-green-500';
-            // Kartani qulflamaslik (chunki qayta ochish mumkin)
             document.getElementById('card-' + id).classList.remove('opacity-70', 'cursor-not-allowed');
         }
 
@@ -358,12 +349,22 @@
             openEditor({{ $masalas[0]->id }});
         @endif
 
-        // ============ Ogohlantirish tizimi ============
-        var MAX = 3, lastWarn = 0, hideTimer = null;
+        // ============ Ogohlantirish tizimi (2 soniyalik himoya) ============
+        var MAX = 3, hideTimer = null, hiddenAt = 0;
+
         document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState !== 'hidden' || submitted) return;
-            if (Date.now() - lastWarn < 1500) return;
-            lastWarn = Date.now();
+            if (submitted) return;
+
+            if (document.visibilityState === 'hidden') {
+                hiddenAt = Date.now();
+                return;
+            }
+
+            if (!hiddenAt || Date.now() - hiddenAt < 2000) {
+                hiddenAt = 0;
+                return;
+            }
+            hiddenAt = 0;
 
             fetch(WARN_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
@@ -386,7 +387,7 @@
             fetch(WARN_URL.replace('/warning/', '/ping/'), { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { if (r.status === 404) { submitted = true; location.href = "{{ route('home') }}"; } })
                 .catch(function () { });
-        }, 30000); // <--- 10000 o'rniga 30000 qilindi
+        }, 30000);
     </script>
 </body>
 

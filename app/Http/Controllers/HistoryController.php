@@ -12,7 +12,7 @@ class HistoryController extends Controller
     {
         return Exam::with('studentResults')
             ->where('exam_code', $code)
-            ->where(fn ($q) => $q->where('user_id', auth()->id())->orWhereNull('user_id'))
+            ->where(fn($q) => $q->where('user_id', auth()->id())->orWhereNull('user_id'))
             ->firstOrFail();
     }
 
@@ -29,14 +29,13 @@ class HistoryController extends Controller
         $created = collect();
         if (auth()->user()->role == 'teacher') {
             $created = Exam::with('studentResults')->withCount('questions')
-                ->where(fn ($q) => $q->where('user_id', auth()->id())->orWhereNull('user_id'))
+                ->where(fn($q) => $q->where('user_id', auth()->id())->orWhereNull('user_id'))
                 ->latest()->get();
         }
 
         return view('history', compact('tab', 'joined', 'created'));
     }
 
-    // O'zim yechgan test
     public function show($token)
     {
         $result = StudentResult::with('exam.questions.options', 'answers')
@@ -44,25 +43,33 @@ class HistoryController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
+        // YANGI: Ballni qayta hisoblash
+        if ($result->finished_at) {
+            $result->recalcScore();
+        }
+
         $chosen = $result->answers->pluck('option_id', 'question_id');
         $back = route('history');
 
         return view('history_show', compact('result', 'chosen', 'back'));
     }
 
-    // Men yaratgan test: qatnashchilar ro'yxati
     public function examShow($code)
     {
         $exam = $this->myExam($code);
         return view('history_exam', compact('exam'));
     }
 
-    // Men yaratgan test: bitta o'quvchi nima yechgan
     public function participantShow($code, $token)
     {
         $exam = $this->myExam($code);
         $result = StudentResult::with('exam.questions.options', 'answers')
             ->where('token', $token)->where('exam_id', $exam->id)->firstOrFail();
+
+        // YANGI: Ballni qayta hisoblash
+        if ($result->finished_at) {
+            $result->recalcScore();
+        }
 
         $chosen = $result->answers->pluck('option_id', 'question_id');
         $back = route('history.exam', $code);

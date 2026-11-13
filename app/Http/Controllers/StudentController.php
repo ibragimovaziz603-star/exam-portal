@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Exam;
 use App\Models\StudentResult;
 use App\Models\StudentAnswer;
-use App\Services\AiChecker;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -35,8 +35,6 @@ class StudentController extends Controller
         $fullName = trim($request->name . ' ' . $request->surname);
         $userId = auth()->id();
 
-        // HIMOYA: Bir xil o'quvchi shu testga allaqachon qo'shilgan bo'lsa,
-        // yangi seans yaratmasdan mavjudini qaytaramiz
         $existing = StudentResult::where('exam_id', $exam->id)
             ->where('student_name', $fullName)
             ->when($userId, fn($q) => $q->where('user_id', $userId))
@@ -66,7 +64,6 @@ class StudentController extends Controller
     {
         $student = StudentResult::with('exam')->where('token', $token)->firstOrFail();
 
-        // HIMOYA: Test allaqachon tugatilgan bo'lsa, natijaga yo'naltirish
         if ($student->finished_at) {
             return redirect()->route('student.result', $token)
                 ->with('info', 'Siz bu testni allaqachon tugatgansiz.');
@@ -78,12 +75,10 @@ class StudentController extends Controller
         return view('student.waiting', compact('student'));
     }
 
-    // YANGILANDI: Tasodifiy savollarni olish
     public function takeExam($token)
     {
         $student = StudentResult::with('exam')->where('token', $token)->firstOrFail();
 
-        // HIMOYA: Test allaqachon tugatilgan bo'lsa, qayta kirishni bloklash
         if ($student->finished_at) {
             return redirect()->route('student.result', $token)
                 ->with('error', 'Siz bu testni allaqachon tugatgansiz. Qayta kirish mumkin emas.');
@@ -106,12 +101,10 @@ class StudentController extends Controller
         return view('student.take_exam', compact('student', 'exam', 'remaining', 'questions'));
     }
 
-    // YANGILANDI: Yangi tizimga moslashtirildi
     public function submitExam(Request $request, $token)
     {
         $student = StudentResult::with('exam')->where('token', $token)->firstOrFail();
 
-        // HIMOYA: Agar allaqachon tugatilgan bo'lsa, qayta finish() chaqirmaymiz
         if (!$student->finished_at) {
             $this->finish($student, $request->input('answers', []), $request->input('codes', []));
         }
@@ -124,11 +117,13 @@ class StudentController extends Controller
     {
         $result = StudentResult::with('exam', 'answers')->where('token', $token)->firstOrFail();
 
-        // HIMOYA: Agar test hali tugatilmagan bo'lsa, testga qaytarish
         if (!$result->finished_at) {
             return redirect()->route('student.takeExam', $token)
                 ->with('error', 'Test hali yakunlanmagan. Iltimos, avval testni tugating.');
         }
+
+        // YANGI: Ballni qayta hisoblash
+        $result->recalcScore();
 
         $chosen = $result->answers->pluck('option_id', 'question_id');
         $back = route('home');
@@ -140,7 +135,6 @@ class StudentController extends Controller
     {
         $student = StudentResult::where('token', $token)->firstOrFail();
 
-        // HIMOYA: Test tugagan bo'lsa, ogohlantirish qo'shmaymiz
         if ($student->finished_at) {
             return response()->json(['warnings' => 3, 'finished' => true]);
         }
@@ -155,11 +149,11 @@ class StudentController extends Controller
         ]);
     }
 
-    // YANGILANDI: Faqat o'quvchiga tushgan savollarni tekshirish va baholash
     private function finish(StudentResult $student, array $answers, array $codes): void
     {
-        // HIMOYA: Takroriy finish() chaqirilishidan himoya
-        if ($student->finished_at) {
+        // HIMOYA: Ikki marta hisoblashdan himoya (lockForUpdate bilan)
+        $fresh = StudentResult::lockForUpdate()->find($student->id);
+        if ($fresh && $fresh->finished_at) {
             return;
         }
 
@@ -167,7 +161,6 @@ class StudentController extends Controller
         $qs = $student->assignedQuestions();
 
         foreach ($qs as $q) {
-            // Takroriy javob yozilmasin
             if (
                 StudentAnswer::where('student_result_id', $student->id)
                     ->where('question_id', $q->id)->exists()
